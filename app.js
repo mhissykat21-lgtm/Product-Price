@@ -144,14 +144,14 @@ const originalInput = document.getElementById('f-orig');
 const priceInput = document.getElementById('f-price');
 
 originalInput.addEventListener('input', function () {
-  let original = parseFloat(originalInput.value);
+    let original = parseFloat(this.value);
 
-  if (!isNaN(original)) {
-    let price = Math.round(original + 2); // add 2 pesos then round off
-    priceInput.value = price;
-  } else {
-    priceInput.value = '';
-  }
+    if (!isNaN(original)) {
+        let computedPrice = Math.round(original + 2);
+        priceInput.value = computedPrice;
+    } else {
+        priceInput.value = '';
+    }
 });
 
 
