@@ -1,0 +1,37 @@
+{
+  "items": [
+    {
+      "id": "demo001",
+      "name": "Wireless Earbuds",
+      "sku": "WE-001",
+      "qty": 25,
+      "origPrice": 450,
+      "price": 799
+    },
+    {
+      "id": "demo002",
+      "name": "USB-C Hub 7-in-1",
+      "sku": "UC-007",
+      "qty": 4,
+      "origPrice": 620,
+      "price": 950
+    },
+    {
+      "id": "demo003",
+      "name": "Mechanical Keyboard",
+      "sku": "MK-104",
+      "qty": 0,
+      "origPrice": 1200,
+      "price": 1850
+    },
+    {
+      "id": "demo004",
+      "name": "Phone Stand Adjustable",
+      "sku": "PS-ADJ",
+      "qty": 18,
+      "origPrice": 85,
+      "price": 149
+    }
+  ],
+  "sales": []
+}
