@@ -139,6 +139,22 @@ function confirmSell() {
 }
 
 /* ── Add Item ── */
+
+const originalInput = document.getElementById('f-orig');
+const priceInput = document.getElementById('f-price');
+
+originalInput.addEventListener('input', function () {
+  let original = parseFloat(originalInput.value);
+
+  if (!isNaN(original)) {
+    let price = Math.round(original + 2); // add 2 pesos then round off
+    priceInput.value = price;
+  } else {
+    priceInput.value = '';
+  }
+});
+
+
 function saveItem() {
   const name = document.getElementById('f-name').value.trim().toUpperCase();
   const qty = parseInt(document.getElementById('f-qty').value);
