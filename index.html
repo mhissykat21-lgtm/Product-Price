@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WILCY POS — Dashboard</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f6ef7">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WILCY POS">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">W</div>
+    <span class="logo-name">WILCY <span>POS</span></span>
+    <span class="logo-tag">Dashboard</span>
+  </div>
+  <nav class="main-nav">
+    <a href="index.html"     class="nav-link active">Dashboard</a>
+    <a href="inventory.html" class="nav-link">Inventory</a>
+    <a href="history.html"   class="nav-link">Sales History</a>
+  </nav>
+  <div class="header-right">
+    <div id="syncStatus" class="sync-badge sync-local">◉ Local</div>
+    <div class="date-chip" id="dateBadge"></div>
+    <div id="userChip"></div>
+  </div>
+</header>
+
+<main>
+
+  <div id="lowStockAlert" class="low-stock-strip" style="display:none;margin-bottom:16px;"></div>
+
+  <div class="dash-split">
+
+    <!-- LEFT: Item Search + Today's Sales Log -->
+    <div>
+
+      <!-- Item Search -->
+      <div class="section-header">
+        <div class="section-title">Find Item</div>
+        <a href="inventory.html" class="btn btn-ghost btn-sm">Manage Inventory →</a>
+      </div>
+      <div class="table-card" id="table-card" style="margin-bottom:24px; padding:18px 20px;">
+        <div class="item-search-wrap" id="itemSearchWrap">
+          <div class="search-wrap" style="position:relative;">
+            <span class="search-ico">⌕</span>
+            <input
+              type="text"
+              id="itemSearchInput"
+              class="item-search-field"
+              placeholder="Search by item name or SKU…"
+              autocomplete="off"
+            >
+          </div>
+          <div class="item-results" id="itemResults"></div>
+        </div>
+        <div style="margin-top:10px;font-size:0.78rem;color:var(--text4);">
+          Search for an item and click <strong>+ Cart</strong> to add it to the cart.
+        </div>
+      </div>
+
+      <!-- Today's Sales Log -->
+      <div class="section-header">
+        <div class="section-title">Today's Sales Log</div>
+        <div style="display:flex;gap:10px;">
+          <a href="history.html" class="btn btn-ghost btn-sm">View History</a>
+          <button class="clear-btn" onclick="clearSales()" data-role="admin">Clear Today</button>
+        </div>
+      </div>
+      <div class="sales-card">
+        <div class="sales-card-header">
+          <span class="sales-label">Today's Transactions</span>
+          <span class="sales-count" id="saleCount">0 records</span>
+        </div>
+        <div class="sales-scroll" id="salesLogBody"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Cart / Sell Panel -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">Sell — Cart</div>
+      </div>
+      <div class="sell-panel">
+        <div class="panel-title">
+          <span class="live-dot"></span> New Transaction
+        </div>
+
+        <!-- Cart items -->
+        <div class="cart-section">
+          <div class="cart-header">
+            <span class="cart-lbl">Cart <span class="cart-count" id="cartCount">0</span></span>
+            <button class="clear-btn" onclick="clearCart()">Clear cart</button>
+          </div>
+          <div id="cartItems" class="cart-items">
+            <div class="cart-empty" id="cartEmpty">No items in cart yet.<br><span style="font-size:0.78rem;color:var(--text4);">Search an item on the left to add it.</span></div>
+          </div>
+        </div>
+
+        <!-- Cart totals -->
+        <div class="cart-totals">
+          <div class="info-row"><span>Subtotal</span><span class="info-val" id="cartSubtotal">₱0.00</span></div>
+          <div class="info-row"><span>Revenue</span> <span class="info-val" style="color:var(--green)" id="cartRevenue">₱0.00</span></div>
+        </div>
+
+        <!-- Checkout fields -->
+        <div class="form-group" style="margin-top:12px;">
+          <label>Customer Name <span style="color:var(--text4);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <input type="text" id="sellCustomer" placeholder="e.g. Walk-in">
+        </div>
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="sellPayment" onchange="onPaymentChange()">
+            <option value="Cash">Cash</option>
+            <option value="GCash">GCash</option>
+            <option value="Maya">Maya</option>
+            <option value="Card">Card</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <!-- Bill & Change — Cash only, NOT saved to DB -->
+        <div class="bill-change-row" id="billChangeRow">
+          <div class="form-group" style="margin:0;">
+            <label>Bill Amount (₱)</label>
+            <input type="number" id="billAmount" min="0" step="1" placeholder="0"
+              oninput="calcChange()" style="font-family:'JetBrains Mono',monospace;font-weight:600;">
+          </div>
+          <div class="change-display" id="changeDisplay">
+            <span class="change-label">Change</span>
+            <span class="change-amount" id="changeAmount">—</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="processCartSale()" id="checkoutBtn" disabled>
+          ✓&nbsp; Confirm Sale
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <a href="index.html" class="active">
+    <span class="nav-icon">🏠</span>
+    <span>Dashboard</span>
+  </a>
+  <a href="inventory.html">
+    <span class="nav-icon">📦</span>
+    <span>Inventory</span>
+  </a>
+  <a href="history.html">
+    <span class="nav-icon">🧾</span>
+    <span>History</span>
+  </a>
+</nav>
+
+<!-- RECEIPT PRINT MOUNT -->
+<div id="printReceiptMount" style="display:none;"></div>
+
+<!-- RECEIPT MODAL -->
+<div class="modal-overlay" id="receiptModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">🧾 Sale Receipt</div>
+      <button class="modal-close" onclick="closeModal('receiptModal')">✕</button>
+    </div>
+    <div id="receiptBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('receiptModal')">Close</button>
+      <button class="btn btn-primary" onclick="printReceipt()">🖨 Print</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toastContainer"></div>
+<script src="auth.js"></script>
+<script src="sheets.js"></script>
+<script src="app.js"></script>
+<script>
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => {
+        navigator.serviceWorker.addEventListener('message', e => {
+          if (e.data?.type === 'GET_SHEETS_URL') {
+            reg.active?.postMessage({ type: 'SHEETS_URL', url: typeof SHEETS_URL !== 'undefined' ? SHEETS_URL : '' });
+          }
+        });
+        window.addEventListener('online', () => {
+          reg.sync?.register('wilcy-sheets-sync').catch(() => {});
+        });
+      })
+      .catch(err => console.warn('[PWA] SW registration failed:', err));
+  });
+}
+
+// ── INSTALL PROMPT ────────────────────────────────────────────────────────────
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (!window.matchMedia('(display-mode: standalone)').matches) showInstallBanner();
+});
+
+function showInstallBanner() {
+  if (document.getElementById('installBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'installBanner';
+  banner.style.cssText = [
+    'position:fixed','bottom:20px','left:50%','transform:translateX(-50%)',
+    'background:#1e2740','border:1px solid #4f6ef740','color:#e2e8f0',
+    'padding:12px 20px','border-radius:12px','display:flex','align-items:center',
+    'gap:12px','box-shadow:0 8px 32px #0008','z-index:9999',
+    'font-family:inherit','font-size:0.85rem','white-space:nowrap'
+  ].join(';');
+  banner.innerHTML = `
+    <span>📲</span>
+    <span>Install WILCY POS as an app</span>
+    <button onclick="installPWA()" style="background:#4f6ef7;color:#fff;border:none;padding:6px 14px;border-radius:7px;cursor:pointer;font-size:0.82rem;">Install</button>
+    <button onclick="this.parentElement.remove()" style="background:transparent;color:#888;border:none;cursor:pointer;font-size:1.1rem;padding:0 4px;">✕</button>
+  `;
+  document.body.appendChild(banner);
+  setTimeout(() => banner?.remove(), 12000);
+}
+
+async function installPWA() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById('installBanner')?.remove();
+  if (outcome === 'accepted') toast('WILCY POS installed! 🎉', 'success');
+}
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  document.getElementById('installBanner')?.remove();
+});
+</script>
+</body>
+</html>
